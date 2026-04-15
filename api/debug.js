@@ -1,9 +1,14 @@
-// 정적 require — Vercel NFT가 추적할 수 있도록
-const collectorMod = "./_collector";
-const generatorMod = "./_generator";
-const indexMod = "./_index";
-
+// 디버그 엔드포인트: ENABLE_DEBUG=true 또는 x-debug-token 헤더 일치 시에만 응답
 module.exports = async function handler(req, res) {
+  const enabled = process.env.ENABLE_DEBUG === "true";
+  const debugToken = process.env.DEBUG_TOKEN;
+  const headerToken = req.headers["x-debug-token"];
+  const tokenOk = debugToken && headerToken === debugToken;
+
+  if (!enabled && !tokenOk) {
+    return res.status(404).json({ error: "Not found" });
+  }
+
   const results = {};
 
   try {
@@ -36,7 +41,10 @@ module.exports = async function handler(req, res) {
   }
 
   res.status(200).json({
-    ok: results.collector === "ok" && results.generator === "ok" && results.index === "ok",
+    ok:
+      results.collector === "ok" &&
+      results.generator === "ok" &&
+      results.index === "ok",
     dirname: __dirname,
     files,
     results,

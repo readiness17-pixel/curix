@@ -15,11 +15,21 @@ async function createBriefLetter(topic, settings) {
   // 3. 브리프 레터 생성
   const letter = await generateLetter(contents, settings);
 
+  // 4. 출처 메타데이터 (Gemini를 거치지 않고 collector 데이터를 그대로 노출)
+  const sources = contents.map((c) => ({
+    title: c.title,
+    url: c.url,
+    source: c.source,
+    source_type: c.source_type,
+    published_at: c.published_at,
+  }));
+
   return {
     topic,
     settings,
     source_count: contents.length,
     letter,
+    sources,
   };
 }
 

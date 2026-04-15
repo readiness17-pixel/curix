@@ -16,20 +16,41 @@ function truncate(text, maxLength) {
 }
 
 // Google News는 제목 끝에 " - 매체명" 형식으로 매체가 붙음
+// 매체명에 하이픈 포함 가능성(MIT Tech-Review 등)을 위해 lastIndexOf 사용
 function extractSourceFromTitle(title) {
   if (!title) return { title: "제목 없음", source: "Google News" };
-  const match = title.match(/^(.*)\s-\s([^-]+)$/);
-  if (match) {
-    return { title: match[1].trim(), source: match[2].trim() };
+  const idx = title.lastIndexOf(" - ");
+  if (idx > 0) {
+    return {
+      title: title.slice(0, idx).trim(),
+      source: title.slice(idx + 3).trim(),
+    };
   }
   return { title, source: "Google News" };
 }
 
-// 토픽에 한국어 포함 여부에 따라 로케일 선택
+// 한글 단어 포함 여부로 로케일 판정
+// 한국 사용자가 한글 단어를 입력했다면 한국 뉴스를 원할 가능성이 압도적으로 높으므로,
+// 한글 토큰이 1개라도 있으면 KR로 검색한다 (영문 브랜드명 + 한글 보조어 케이스 보호)
 function detectLocale(topic) {
-  return /[가-힣]/.test(topic)
+  if (!topic || typeof topic !== "string") {
+    return { hl: "en", gl: "US", ceid: "US:en" };
+  }
+  const hasKoreanToken = topic
+    .split(/\s+/)
+    .some((token) => /[가-힣]/.test(token));
+  return hasKoreanToken
     ? { hl: "ko", gl: "KR", ceid: "KR:ko" }
     : { hl: "en", gl: "US", ceid: "US:en" };
+}
+
+// URL에서 안전하게 호스트명 추출 (잘못된 URL이어도 throw하지 않음)
+function safeHostname(url) {
+  try {
+    return new URL(url).hostname.replace("www.", "");
+  } catch {
+    return "unknown";
+  }
 }
 
 // Tavily 웹 검색
@@ -49,15 +70,24 @@ async function searchWithTavily(topic) {
       max_results: 10,
     });
 
-    return response.data.results.map((item) => ({
-      id: crypto.randomUUID(),
-      title: item.title || "제목 없음",
-      content: truncate(item.raw_content || item.content, MAX_CONTENT_LENGTH),
-      source: new URL(item.url).hostname.replace("www.", ""),
-      source_type: "web",
-      url: item.url,
-      published_at: item.published_date || null,
-    }));
+    return response.data.results
+      .map((item) => {
+        try {
+          return {
+            id: crypto.randomUUID(),
+            title: item.title || "제목 없음",
+            content: truncate(item.raw_content || item.content, MAX_CONTENT_LENGTH),
+            source: safeHostname(item.url),
+            source_type: "web",
+            url: item.url,
+            published_at: item.published_date || null,
+          };
+        } catch (e) {
+          console.warn("[Tavily] 항목 변환 실패:", e.message);
+          return null;
+        }
+      })
+      .filter(Boolean);
   } catch (error) {
     console.error("[Tavily] 검색 실패:", error.message);
     return [];

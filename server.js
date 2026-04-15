@@ -4,9 +4,11 @@ const { createBriefLetter } = require("./index");
 require("dotenv").config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+const MAX_TOPIC_LENGTH = 100;
+
+app.use(express.json({ limit: "10kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // 톤 매핑 (한글 → 영문)
@@ -16,12 +18,31 @@ const TONE_MAP = {
   "간결한": "concise",
 };
 
+// 토픽 정규화: 제어 문자 제거, 공백 정리
+function sanitizeTopic(raw) {
+  if (typeof raw !== "string") return "";
+  return raw
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 app.post("/api/generate", async (req, res) => {
   try {
-    const { topic, settings } = req.body;
+    const { topic, settings } = req.body || {};
 
-    if (!topic || !topic.trim()) {
+    const cleanTopic = sanitizeTopic(topic);
+    if (!cleanTopic) {
       return res.status(400).json({ error: "토픽을 입력해주세요." });
+    }
+    if (cleanTopic.length > MAX_TOPIC_LENGTH) {
+      return res.status(400).json({
+        error: `토픽은 ${MAX_TOPIC_LENGTH}자 이내로 입력해주세요.`,
+      });
+    }
+
+    if (!settings || typeof settings !== "object") {
+      return res.status(400).json({ error: "설정값이 없습니다." });
     }
 
     const mappedSettings = {
@@ -30,7 +51,7 @@ app.post("/api/generate", async (req, res) => {
       reading_time: settings.reading_time,
     };
 
-    const result = await createBriefLetter(topic.trim(), mappedSettings);
+    const result = await createBriefLetter(cleanTopic, mappedSettings);
     res.json(result);
   } catch (error) {
     console.error("[API 에러]", error.message);

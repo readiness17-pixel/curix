@@ -359,6 +359,66 @@
       margin-top: 16px;
     }
 
+    .sources-section {
+      margin-top: 24px;
+    }
+
+    .sources-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 12px;
+      letter-spacing: 0.3px;
+    }
+
+    .sources-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .source-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .source-item:last-child {
+      border-bottom: none;
+    }
+
+    .source-item a {
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .source-item a:hover {
+      text-decoration: underline;
+    }
+
+    .source-meta {
+      display: block;
+      color: #999;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .source-publisher {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .source-date {
+      color: #999;
+    }
+
+    .source-date-unknown {
+      color: #c0c0c0;
+      font-style: italic;
+    }
+
     @media (max-width: 480px) {
       .container { padding: 24px 16px 60px; }
       .input-section, .result-section { padding: 24px 20px; }
@@ -435,6 +495,10 @@
       <hr class="divider" />
       <div class="letter-body" id="letterBody"></div>
       <hr class="divider" />
+      <div class="sources-section" id="sourcesSection">
+        <div class="sources-title">참고한 출처</div>
+        <ul class="sources-list" id="sourcesList"></ul>
+      </div>
       <p class="source-count" id="sourceCount"></p>
       <button class="reset-btn" onclick="reset()">다른 토픽으로 다시 만들기</button>
     </div>
@@ -573,10 +637,75 @@
       document.getElementById("letterBody").innerHTML = marked.parse(bodyMarkdown);
       document.getElementById("sourceCount").textContent = `${data.source_count}개 소스에서 수집`;
 
+      // 출처 목록 렌더링 (백엔드의 sources 배열 사용 - Gemini를 거치지 않음)
+      renderSources(data.sources || []);
+
       showSection("resultSection");
 
       // 결과로 스크롤
       document.getElementById("resultSection").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function formatPublishedDate(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return null;
+      const now = new Date();
+      const diffMs = now - d;
+      const diffDays = Math.floor(diffMs / 86400000);
+      if (diffDays === 0) return "오늘";
+      if (diffDays === 1) return "어제";
+      if (diffDays < 7) return `${diffDays}일 전`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)}주 전`;
+      // 30일 이상은 절대 날짜로
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}.${mm}.${dd}`;
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return "";
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderSources(sources) {
+      const ul = document.getElementById("sourcesList");
+      const section = document.getElementById("sourcesSection");
+      ul.innerHTML = "";
+
+      if (!sources || sources.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+      section.style.display = "block";
+
+      sources.forEach((src) => {
+        const li = document.createElement("li");
+        li.className = "source-item";
+
+        const title = escapeHtml(src.title || "제목 없음");
+        const url = escapeHtml(src.url || "#");
+        const publisher = escapeHtml(src.source || "출처 미상");
+        const dateLabel = formatPublishedDate(src.published_at);
+
+        const dateHtml = dateLabel
+          ? `<span class="source-date">${escapeHtml(dateLabel)}</span>`
+          : `<span class="source-date-unknown">날짜 정보 없음</span>`;
+
+        li.innerHTML = `
+          <a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a>
+          <span class="source-meta">
+            <span class="source-publisher">${publisher}</span> · ${dateHtml}
+          </span>
+        `;
+        ul.appendChild(li);
+      });
     }
 
     function reset() {
