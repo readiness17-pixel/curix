@@ -3,20 +3,33 @@ const RSSParser = require("rss-parser");
 const crypto = require("crypto");
 if (!process.env.VERCEL) require("dotenv").config();
 
-const rssParser = new RSSParser();
-
-const RSS_FEEDS = [
-  { url: "https://techcrunch.com/feed/", name: "TechCrunch" },
-  { url: "https://openai.com/blog/rss.xml", name: "OpenAI Blog" },
-  { url: "https://www.bloter.net/feed", name: "Bloter" },
-  { url: "https://byline.network/feed", name: "Byline Network" },
-];
+const rssParser = new RSSParser({
+  timeout: 15000,
+  headers: { "User-Agent": "Mozilla/5.0 (compatible; CURIX/1.0)" },
+});
 
 const MAX_CONTENT_LENGTH = 2000;
 
 function truncate(text, maxLength) {
   if (!text) return "";
   return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+}
+
+// Google News는 제목 끝에 " - 매체명" 형식으로 매체가 붙음
+function extractSourceFromTitle(title) {
+  if (!title) return { title: "제목 없음", source: "Google News" };
+  const match = title.match(/^(.*)\s-\s([^-]+)$/);
+  if (match) {
+    return { title: match[1].trim(), source: match[2].trim() };
+  }
+  return { title, source: "Google News" };
+}
+
+// 토픽에 한국어 포함 여부에 따라 로케일 선택
+function detectLocale(topic) {
+  return /[가-힣]/.test(topic)
+    ? { hl: "ko", gl: "KR", ceid: "KR:ko" }
+    : { hl: "en", gl: "US", ceid: "US:en" };
 }
 
 // Tavily 웹 검색
@@ -51,59 +64,43 @@ async function searchWithTavily(topic) {
   }
 }
 
-// RSS 피드 수집 (토픽 관련 기사만 필터링)
+// Google News RSS로 토픽 검색 (최근 30일 이내 기사로 제한)
 async function collectFromRSS(topic) {
-  const results = [];
-  // 2글자 이상의 의미 있는 키워드만 사용 (조사/일반어 제외)
-  const topicKeywords = topic
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((kw) => kw.length >= 2);
+  const locale = detectLocale(topic);
+  // when:30d 연산자로 에버그린 토픽에서도 최신 기사만 수집
+  const query = `${topic} when:30d`;
+  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(
+    query
+  )}&hl=${locale.hl}&gl=${locale.gl}&ceid=${locale.ceid}`;
 
-  for (const feed of RSS_FEEDS) {
-    try {
-      const parsed = await rssParser.parseURL(feed.url);
+  try {
+    const parsed = await rssParser.parseURL(url);
+    const items = (parsed.items || []).slice(0, 15);
 
-      const matched = parsed.items.filter((item) => {
-        const text = [
-          item.title || "",
-          item.contentSnippet || "",
-          item.content || "",
-          item.summary || "",
-        ]
-          .join(" ")
-          .toLowerCase();
+    const results = items.map((item) => {
+      const { title, source } = extractSourceFromTitle(item.title);
+      return {
+        id: crypto.randomUUID(),
+        title,
+        content: truncate(
+          item.contentSnippet || item.content || item.summary || "",
+          MAX_CONTENT_LENGTH
+        ),
+        source,
+        source_type: "rss",
+        url: item.link || "",
+        published_at: item.isoDate || item.pubDate || null,
+      };
+    });
 
-        // 키워드의 절반 이상이 매칭되어야 관련 기사로 판단
-        const matchCount = topicKeywords.filter((kw) => text.includes(kw)).length;
-        const threshold = Math.max(2, Math.ceil(topicKeywords.length / 2));
-        return matchCount >= threshold;
-      });
-
-      const items = matched.slice(0, 3);
-
-      for (const item of items) {
-        results.push({
-          id: crypto.randomUUID(),
-          title: item.title || "제목 없음",
-          content: truncate(
-            item.contentSnippet || item.content || item.summary || "",
-            MAX_CONTENT_LENGTH
-          ),
-          source: feed.name,
-          source_type: "rss",
-          url: item.link || "",
-          published_at: item.isoDate || item.pubDate || null,
-        });
-      }
-
-      console.log(`[RSS] ${feed.name}: ${items.length}건 수집 (전체 ${parsed.items.length}건 중 매칭)`);
-    } catch (error) {
-      console.warn(`[RSS] ${feed.name} 수집 실패: ${error.message}`);
-    }
+    console.log(
+      `[Google News RSS] ${results.length}건 수집 (locale: ${locale.ceid})`
+    );
+    return results;
+  } catch (error) {
+    console.warn(`[Google News RSS] 수집 실패: ${error.message}`);
+    return [];
   }
-
-  return results;
 }
 
 // 메인 수집 함수
@@ -116,7 +113,9 @@ async function collectContents(topic) {
     collectFromRSS(topic),
   ]);
 
-  console.log(`\n[결과] Tavily: ${webResults.length}건, RSS: ${rssResults.length}건`);
+  console.log(
+    `\n[결과] Tavily: ${webResults.length}건, Google News: ${rssResults.length}건`
+  );
 
   // 합치기
   const allResults = [...webResults, ...rssResults];
@@ -129,10 +128,10 @@ async function collectContents(topic) {
     return true;
   });
 
-  // 날짜순 정렬 (최신순)
+  // 날짜순 정렬 (최신순) — 날짜 없는 항목은 가장 뒤로
   deduplicated.sort((a, b) => {
-    const dateA = a.published_at ? new Date(a.published_at) : new Date(0);
-    const dateB = b.published_at ? new Date(b.published_at) : new Date(0);
+    const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+    const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
     return dateB - dateA;
   });
 
