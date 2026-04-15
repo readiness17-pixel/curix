@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CURIX - 서비스 프로세스 소개</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+      background: #fff;
+      color: #1a1a1a;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 32px 80px;
+    }
+
+    /* 헤더 */
+    .doc-header {
+      border-bottom: 3px solid #111;
+      padding-bottom: 24px;
+      margin-bottom: 40px;
+    }
+    .doc-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #4f46e5;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .doc-title {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+    }
+    .doc-title span { color: #4f46e5; }
+    .doc-meta {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #888;
+    }
+    .doc-meta strong { color: #555; }
+
+    /* 섹션 */
+    h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 48px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #eee;
+      color: #111;
+    }
+    h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin: 28px 0 10px;
+      color: #222;
+    }
+    p {
+      font-size: 15.5px;
+      margin: 10px 0;
+      color: #333;
+    }
+
+    /* 한줄 요약 박스 */
+    .summary-box {
+      background: #f0f0ff;
+      border-left: 4px solid #4f46e5;
+      padding: 20px 24px;
+      margin: 24px 0;
+      border-radius: 0 12px 12px 0;
+    }
+    .summary-box p {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+
+    /* 프로세스 플로우 */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 32px 0;
+    }
+    .flow-step {
+      display: flex;
+      gap: 20px;
+      position: relative;
+    }
+    .flow-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 48px;
+    }
+    .flow-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #4f46e5;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .flow-line {
+      width: 2px;
+      flex: 1;
+      background: #d4d4f7;
+      min-height: 20px;
+    }
+    .flow-content {
+      background: #fafafa;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      flex: 1;
+      border: 1px solid #eee;
+    }
+    .flow-content h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 6px;
+    }
+    .flow-content p {
+      font-size: 14px;
+      color: #555;
+      margin: 4px 0;
+    }
+    .flow-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 6px;
+      margin-top: 8px;
+    }
+    .tag-api { background: #e0f2fe; color: #0369a1; }
+    .tag-ai { background: #fce7f3; color: #be185d; }
+    .tag-data { background: #ecfccb; color: #4d7c0f; }
+
+    /* 아키텍처 */
+    .arch-diagram {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 32px;
+      margin: 24px 0;
+      text-align: center;
+      font-family: 'Pretendard Variable', monospace;
+    }
+    .arch-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0;
+      flex-wrap: wrap;
+    }
+    .arch-box {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      min-width: 120px;
+      text-align: center;
+    }
+    .arch-user { background: #dbeafe; color: #1e40af; border: 2px solid #93c5fd; }
+    .arch-server { background: #f3e8ff; color: #7c3aed; border: 2px solid #c4b5fd; }
+    .arch-ext { background: #fef3c7; color: #92400e; border: 2px solid #fcd34d; }
+    .arch-ai { background: #fce7f3; color: #be185d; border: 2px solid #f9a8d4; }
+    .arch-arrow {
+      font-size: 20px;
+      color: #aaa;
+    }
+
+    /* 설정 테이블 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    th {
+      background: #f3f4f6;
+      padding: 10px 16px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 13px;
+      color: #555;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    /* 스크린샷 placeholder */
+    .screenshot {
+      background: #f3f4f6;
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      margin: 20px 0;
+    }
+
+    /* 리스트 */
+    ul, ol {
+      margin: 10px 0;
+      padding-left: 24px;
+    }
+    li {
+      font-size: 15px;
+      margin: 6px 0;
+      color: #333;
+    }
+
+    /* 구분선 */
+    hr {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 40px 0;
+    }
+
+    /* 코드 블록 */
+    .code-block {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 24px;
+      border-radius: 12px;
+      margin: 16px 0;
+      font-size: 13px;
+      line-height: 1.9;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      font-family: 'Pretendard Variable', monospace;
+    }
+    .code-block .var { color: #f9e2af; }
+    .code-block .data { color: #a6e3a1; }
+
+    /* 비용 하이라이트 */
+    .cost-highlight {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 16px 24px;
+      margin: 20px 0;
+      border-radius: 0 12px 12px 0;
+      font-size: 14px;
+      color: #92400e;
+    }
+
+    /* 풋터 */
+    .doc-footer {
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 2px solid #eee;
+      font-size: 13px;
+      color: #aaa;
+      text-align: center;
+    }
+
+    @media print {
+      .page { padding: 20px; }
+      .flow-content { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- 헤더 -->
+    <div class="doc-header">
+      <div class="doc-label">Internal Document</div>
+      <h1 class="doc-title">CUR<span>IX</span> 서비스 프로세스 소개</h1>
+      <div class="doc-meta">
+        <strong>버전:</strong> MVP v1.0 &nbsp;&middot;&nbsp;
+        <strong>작성일:</strong> 2026.03.25 &nbsp;&middot;&nbsp;
+        <strong>분류:</strong> 내부 공유용
+      </div>
+    </div>
+
+    <!-- 한줄 요약 -->
+    <div class="summary-box">
+      <p>CURIX는 사용자가 관심 토픽을 입력하면, 관련 콘텐츠를 자동 수집하고 AI가 편집하여 맞춤형 브리프 레터를 생성해주는 서비스입니다.</p>
+    </div>
+
+    <!-- 1. 서비스 개요 -->
+    <h2>1. 서비스 개요</h2>
+    <p>기존 뉴스레터는 발행자가 토픽을 선정하고, 독자는 수동적으로 소비합니다. CURIX는 이 구조를 뒤집어, <strong>독자가 토픽을 지정하면 AI가 실시간으로 콘텐츠를 수집·편집</strong>하여 개인화된 브리프 레터를 즉시 제공합니다.</p>
+
+    <h3>핵심 가치</h3>
+    <ul>
+      <li><strong>온디맨드 생성</strong> — 원하는 주제를, 원하는 스타일로, 원하는 시점에</li>
+      <li><strong>다중 소스 수집</strong> — 웹 검색 + RSS 피드를 통합하여 폭넓은 정보 확보</li>
+      <li><strong>AI 편집</strong> — 단순 나열이 아닌, 맥락과 인사이트가 있는 레터 생성</li>
+    </ul>
+
+    <!-- 2. 전체 프로세스 -->
+    <h2>2. 전체 프로세스</h2>
+
+    <div class="flow">
+      <!-- Step 1 -->
+      <div class="flow-step">
+        <div class="flow-indicator">
+          <div class="flow-number">1</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-content">
+          <h4>토픽 & 설정 입력</h4>
+          <p>사용자가 관심 토픽(예: "AI 규제 동향")을 입력하고, 레터 스타일·톤·분량을 선택합니다.</p>
+          <span class="flow-tag tag-data">사용자 입력</span>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="flow-step">
+        <div class="flow-indicator">
+          <div class="flow-number">2</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-content">
+          <h4>콘텐츠 수집 (병렬 실행)</h4>
+          <p><strong>웹 검색 (Tavily API)</strong> — 토픽 기반 고급 검색으로 관련 웹 콘텐츠 10건을 수집합니다. 본문 전체를 포함하여 깊이 있는 정보를 확보합니다.</p>
+          <p><strong>RSS 피드 수집</strong> — 등록된 미디어(TechCrunch, OpenAI Blog, Byline Network 등)에서 토픽 키워드와 매칭되는 최신 기사를 필터링합니다.</p>
+          <span class="flow-tag tag-api">Tavily API</span>
+          <span class="flow-tag tag-api">RSS Parser</span>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="flow-step">
+        <div class="flow-indicator">
+          <div class="flow-number">3</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-content">
+          <h4>데이터 정제</h4>
+          <p>수집된 콘텐츠를 통일된 형식으로 변환하고, URL 기준 중복 제거 후 최신순으로 정렬합니다.</p>
+          <span class="flow-tag tag-data">중복 제거</span>
+          <span class="flow-tag tag-data">날짜순 정렬</span>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="flow-step">
+        <div class="flow-indicator">
+          <div class="flow-number">4</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-content">
+          <h4>AI 브리프 레터 생성</h4>
+          <p>정제된 콘텐츠와 사용자 설정을 Gemini AI에 전달합니다. AI는 원문을 자기 말로 재작성하고, 출처를 명시하며, 설정에 맞는 구조와 톤으로 브리프 레터를 편집합니다.</p>
+          <span class="flow-tag tag-ai">Gemini 2.5 Flash</span>
+          <span class="flow-tag tag-ai">프롬프트 엔지니어링</span>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="flow-step">
+        <div class="flow-indicator">
+          <div class="flow-number">5</div>
+        </div>
+        <div class="flow-content">
+          <h4>결과 렌더링</h4>
+          <p>생성된 레터(JSON)를 마크다운 → HTML로 변환하여 웹 페이지에 표시합니다. 제목, 태그, 읽기 시간, 섹션별 본문, 출처 링크가 포함됩니다.</p>
+          <span class="flow-tag tag-data">Markdown 렌더링</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 시스템 아키텍처 -->
+    <h2>3. 시스템 아키텍처</h2>
+
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-box arch-user">브라우저 (사용자)</div>
+      </div>
+      <div class="arch-row"><span class="arch-arrow">&#x25BC;</span></div>
+      <div class="arch-row">
+        <div class="arch-box arch-server">Express API 서버</div>
+      </div>
+      <div class="arch-row"><span class="arch-arrow">&#x25BC;</span></div>
+      <div class="arch-row">
+        <div class="arch-box arch-ext">Tavily API<br/><small>웹 검색</small></div>
+        <div class="arch-box arch-ext">RSS 피드<br/><small>뉴스 수집</small></div>
+        <div class="arch-box arch-ai">Gemini AI<br/><small>레터 생성</small></div>
+      </div>
+    </div>
+
+    <!-- 4. 사용자 설정 옵션 -->
+    <h2>4. 사용자 설정 옵션</h2>
+
+    <h3>스타일 (persona_type)</h3>
+    <table>
+      <tr><th>옵션</th><th>설명</th></tr>
+      <tr><td><strong>요약형</strong></td><td>핵심만 추출. 불릿 포인트 위주. 항목당 1~3문장.</td></tr>
+      <tr><td><strong>인사이트형</strong></td><td>배경 맥락 + "왜 중요한가" 분석 + 향후 전망. 섹션 간 논리적 흐름 연결.</td></tr>
+      <tr><td><strong>큐레이션형</strong></td><td>각 콘텐츠를 독립적 추천 아이템으로 구성. 제목 + 한줄 소개 + 추천 이유 + 원문 링크.</td></tr>
+    </table>
+
+    <h3>톤 (tone)</h3>
+    <table>
+      <tr><th>옵션</th><th>설명</th></tr>
+      <tr><td><strong>친근한</strong></td><td>구어체. "~인데요", "~거든요" 허용. 이모지 사용 가능.</td></tr>
+      <tr><td><strong>전문적인</strong></td><td>격식체(합니다/습니다). 전문 용어와 데이터 인용.</td></tr>
+      <tr><td><strong>간결한</strong></td><td>최소 단어. 불릿 포인트·숫자 중심.</td></tr>
+    </table>
+
+    <h3>분량 (reading_time)</h3>
+    <table>
+      <tr><th>옵션</th><th>섹션 수</th><th>글자 수</th></tr>
+      <tr><td><strong>3분 이내</strong></td><td>2~3개</td><td>1,200~1,500자</td></tr>
+      <tr><td><strong>5분 이내</strong></td><td>3~5개</td><td>2,000~2,500자</td></tr>
+      <tr><td><strong>10분 이상</strong></td><td>5~8개</td><td>4,000~5,000자</td></tr>
+    </table>
+
+    <!-- 5. 레터 출력 구조 -->
+    <h2>5. 레터 출력 구조</h2>
+    <p>생성된 브리프 레터는 다음 JSON 구조로 반환되며, 프론트엔드에서 마크다운으로 렌더링됩니다.</p>
+
+    <table>
+      <tr><th>필드</th><th>설명</th><th>예시</th></tr>
+      <tr><td>title</td><td>레터 제목 (20자 이내)</td><td>AI 규제와 혁신의 균형점</td></tr>
+      <tr><td>subtitle</td><td>한줄 요약</td><td>글로벌 AI 규제 강화 속 기업 전략 분석</td></tr>
+      <tr><td>topic_tags</td><td>관련 태그</td><td>["AI 규제", "거버넌스"]</td></tr>
+      <tr><td>reading_time_minutes</td><td>예상 읽기 시간</td><td>5</td></tr>
+      <tr><td>intro</td><td>인트로 (마크다운)</td><td>—</td></tr>
+      <tr><td>sections[]</td><td>본문 섹션 배열</td><td>type, title, content</td></tr>
+      <tr><td>outro</td><td>아웃트로 (마크다운)</td><td>—</td></tr>
+    </table>
+
+    <!-- 6. 기술 스택 -->
+    <h2>6. 기술 스택</h2>
+    <table>
+      <tr><th>구분</th><th>기술</th><th>용도</th></tr>
+      <tr><td>런타임</td><td>Node.js</td><td>서버 실행 환경</td></tr>
+      <tr><td>웹 서버</td><td>Express</td><td>API 서버 + 정적 파일 서빙</td></tr>
+      <tr><td>웹 검색</td><td>Tavily API</td><td>토픽 기반 웹 콘텐츠 검색</td></tr>
+      <tr><td>뉴스 수집</td><td>rss-parser</td><td>RSS 피드 파싱 및 필터링</td></tr>
+      <tr><td>AI 생성</td><td>Google Gemini 2.5 Flash</td><td>브리프 레터 편집 및 생성</td></tr>
+      <tr><td>프론트엔드</td><td>Vanilla HTML/CSS/JS</td><td>단일 페이지 UI</td></tr>
+      <tr><td>마크다운</td><td>marked.js (CDN)</td><td>레터 본문 렌더링</td></tr>
+    </table>
+
+    <!-- 7. 프로젝트 구조 -->
+    <h2>7. 프로젝트 구조</h2>
+    <pre style="background:#f3f4f6; padding:20px; border-radius:12px; font-size:14px; line-height:1.8; overflow-x:auto;">
+curix/
+├── .env                 # API 키 (Tavily, Gemini)
+├── .gitignore
+├── package.json
+├── server.js            # Express API 서버
+├── index.js             # createBriefLetter() E2E 함수
+├── collector.js         # 콘텐츠 수집 (Tavily + RSS)
+├── generator.js         # AI 브리프 레터 생성 (Gemini)
+├── public/
+│   └── index.html       # 웹 UI
+├── test.js              # 수집기 단위 테스트
+└── test-letter.js       # 레터 생성 통합 테스트
+    </pre>
+
+    <!-- 8. 실행 방법 -->
+    <h2>8. 실행 방법</h2>
+    <ol>
+      <li><code>.env</code> 파일에 <code>TAVILY_API_KEY</code>와 <code>GEMINI_API_KEY</code> 설정</li>
+      <li><code>npm install</code> 실행</li>
+      <li><code>npm run dev</code>로 개발 서버 실행 (코드 변경 시 자동 재시작)</li>
+      <li>브라우저에서 <code>http://localhost:3000</code> 접속</li>
+      <li>토픽 입력 → 설정 선택 → "레터 생성하기" 클릭</li>
+    </ol>
+
+    <!-- 9. 향후 로드맵 -->
+    <h2>9. 향후 로드맵</h2>
+    <table>
+      <tr><th>단계</th><th>기능</th><th>설명</th></tr>
+      <tr><td>Phase 2</td><td>사용자 인증 & 토픽 저장</td><td>개인 계정 기반 토픽 구독 관리</td></tr>
+      <tr><td>Phase 2</td><td>이메일 발송</td><td>생성된 레터를 이메일로 자동 전달</td></tr>
+      <tr><td>Phase 3</td><td>스케줄링</td><td>매일/매주 자동으로 레터 생성 및 발송</td></tr>
+      <tr><td>Phase 3</td><td>RSS 피드 커스터마이징</td><td>사용자가 직접 RSS 소스를 추가/관리</td></tr>
+      <tr><td>Phase 4</td><td>피드백 학습</td><td>사용자 반응 기반으로 레터 품질 개선</td></tr>
+    </table>
+
+    <hr />
+
+    <!-- 10. 비용 분석 -->
+    <h2>10. 비용 분석</h2>
+
+    <h3>10-1. API 단가</h3>
+    <table>
+      <tr><th>항목</th><th>가격 모델</th></tr>
+      <tr>
+        <td><strong>Tavily API</strong> (웹 검색)</td>
+        <td>무료: 월 1,000회 / 유료: 월 $5 (1,000회), 추가 $0.005/회</td>
+      </tr>
+      <tr>
+        <td><strong>Gemini 2.5 Flash</strong> (레터 생성)</td>
+        <td>입력: $0.15 / 1M 토큰, 출력: $0.60 / 1M 토큰</td>
+      </tr>
+    </table>
+
+    <h3>10-2. 레터 1건 생성 비용</h3>
+    <p>CURIX 1회 요청 = Tavily 1회 호출 + Gemini 1회 호출 기준:</p>
+    <table>
+      <tr><th>항목</th><th>계산</th><th>비용</th></tr>
+      <tr><td>Tavily 검색</td><td>1회 호출</td><td>$0.005</td></tr>
+      <tr><td>Gemini 입력</td><td>~3,000토큰 &times; $0.15/1M</td><td>$0.00045</td></tr>
+      <tr><td>Gemini 출력</td><td>~2,000토큰 &times; $0.60/1M</td><td>$0.0012</td></tr>
+      <tr><td>RSS 파싱</td><td>자체 서버 (API 비용 없음)</td><td>$0</td></tr>
+      <tr><td><strong>합계</strong></td><td></td><td><strong>$0.0067 / 건 (약 ₩7)</strong></td></tr>
+    </table>
+
+    <div class="cost-highlight">
+      비용 비중: <strong>Tavily(수집) 77%</strong> / <strong>Gemini(생성) 23%</strong> — 수집 단계가 전체 비용의 대부분을 차지합니다.
+    </div>
+
+    <h3>10-3. 단계별 월 비용 시뮬레이션</h3>
+    <table>
+      <tr><th>단계</th><th>사용자 규모</th><th>월 생성 건수</th><th>Tavily</th><th>Gemini</th><th>월 합계</th></tr>
+      <tr>
+        <td><strong>MVP 테스트</strong></td>
+        <td>내부 10명</td>
+        <td>~300건</td>
+        <td>무료 범위</td>
+        <td>무료 범위</td>
+        <td><strong>$0</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Q2 (얼리액세스)</strong></td>
+        <td>500명</td>
+        <td>~4,000건</td>
+        <td>~$20</td>
+        <td>~$7</td>
+        <td><strong>~$27</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Q3</strong></td>
+        <td>DAU 1,000명</td>
+        <td>~12,000건</td>
+        <td>~$60</td>
+        <td>~$20</td>
+        <td><strong>~$80</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Q4</strong></td>
+        <td>MAU 5,000명</td>
+        <td>~40,000건</td>
+        <td>~$200</td>
+        <td>~$70</td>
+        <td><strong>~$270</strong></td>
+      </tr>
+    </table>
+
+    <div class="summary-box">
+      <p>PRD 예산 $150~300/월 기준, Q4까지 예산 범위 내. MVP~Q2는 무료 티어로 커버 가능.</p>
+    </div>
+
+    <h3>10-4. 타 모델 비용 비교</h3>
+    <p>동일 입력(3,000토큰) + 동일 출력(2,000토큰) 기준, 1건당 AI 비용:</p>
+    <table>
+      <tr><th>모델</th><th>1건 비용</th><th>월 4만건 비용</th></tr>
+      <tr><td><strong>Gemini 2.5 Flash</strong> (현재 선택)</td><td>$0.0017</td><td>$67</td></tr>
+      <tr><td>GPT-4o mini</td><td>$0.0012</td><td>$48</td></tr>
+      <tr><td>Claude 3.5 Haiku</td><td>$0.0023</td><td>$90</td></tr>
+      <tr><td>Gemini 2.5 Pro</td><td>$0.0048</td><td>$192</td></tr>
+      <tr><td>GPT-4o</td><td>$0.0175</td><td>$700</td></tr>
+      <tr><td>Claude 3.5 Sonnet</td><td>$0.0105</td><td>$420</td></tr>
+    </table>
+
+    <h3>10-5. 비용 최적화 시점</h3>
+    <table>
+      <tr><th>시점</th><th>전략</th></tr>
+      <tr>
+        <td><strong>MAU 1만+</strong></td>
+        <td>Tavily &rarr; 직접 크롤링 전환 (Tavily 비용 제거)</td>
+      </tr>
+      <tr>
+        <td><strong>MAU 5만+</strong></td>
+        <td>유사 토픽 구독자 묶음 처리 (동일 토픽 수집 1회 &rarr; N명 공유)</td>
+      </tr>
+    </table>
+
+    <hr />
+
+    <!-- 11. AI 프롬프트 전문 -->
+    <h2>11. AI 프롬프트 전문</h2>
+    <p>아래는 레터 생성 시 Gemini 2.5 Flash에 실제로 전달되는 시스템 프롬프트입니다. 사용자가 선택한 설정(스타일·톤·분량)과 수집된 콘텐츠가 이 프롬프트와 함께 AI에 입력됩니다.</p>
+
+    <h3>11-1. 시스템 프롬프트 (System Instruction)</h3>
+    <div class="code-block">당신은 CURIX의 브리프 레터 편집 AI입니다.
+수집된 콘텐츠를 편집해서 개인맞춤형 브리프 레터를 만듭니다.
+
+핵심 규칙:
+1. 원문을 그대로 베끼지 마세요. 반드시 자기 말로 다시 쓰세요.
+2. 모든 정보에 출처 링크를 [텍스트](URL) 형태로 넣으세요.
+3. 반드시 "인트로 &rarr; 본문 섹션들 &rarr; 아웃트로" 구조를 지키세요.
+4. 한국어로 작성하세요.
+
+personaType별 스타일:
+[요약형]
+- 핵심만 추출. 불릿 포인트 위주. 항목당 1~3문장.
+[인사이트형]
+- 배경 맥락 + "왜 중요한가" 분석 + 향후 전망 포함.
+- 섹션 간 논리적 흐름 연결.
+[큐레이션형]
+- 각 콘텐츠를 독립적 추천 아이템으로 구성.
+- 형식: 제목 + 한줄 소개 + 추천 이유 + 원문 링크.
+
+tone별 문체:
+[casual] 구어체. "~인데요", "~거든요" 허용. 이모지 가능.
+[professional] 격식체(합니다/습니다). 전문 용어 + 데이터 인용.
+[concise] 최소 단어. 불릿 포인트·숫자 중심.
+
+reading_time별 분량:
+"3분 이내": 섹션 2~3개, 총 1,200~1,500자
+"5분 이내": 섹션 3~5개, 총 2,000~2,500자
+"10분 이상": 섹션 5~8개, 총 4,000~5,000자
+
+출력은 반드시 아래 JSON만 반환:
+{
+  "title": "레터 제목 (20자 이내)",
+  "subtitle": "한줄 요약",
+  "topic_tags": ["태그1", "태그2"],
+  "reading_time_minutes": 5,
+  "intro": "인트로 마크다운 텍스트",
+  "sections": [
+    {
+      "type": "insight 또는 summary 또는 curation",
+      "title": "섹션 제목",
+      "content": "섹션 본문 마크다운"
+    }
+  ],
+  "outro": "아웃트로 마크다운 텍스트"
+}</div>
+
+    <h3>11-2. 유저 프롬프트 템플릿 (매 요청 시 동적 생성)</h3>
+    <div class="code-block">아래 수집된 콘텐츠를 기반으로 브리프 레터를 작성해주세요.
+
+━━━━━━━━━━━━━━━━━━━━
+사용자 설정
+━━━━━━━━━━━━━━━━━━━━
+- 페르소나: <span class="var">{{persona_type}}</span>
+- 톤: <span class="var">{{tone}}</span>
+- 읽기 시간: <span class="var">{{reading_time}}</span>
+
+━━━━━━━━━━━━━━━━━━━━
+수집된 콘텐츠 (<span class="var">{{count}}</span>건)
+━━━━━━━━━━━━━━━━━━━━
+[콘텐츠 1]
+- 제목: <span class="data">{{title}}</span>
+- 출처: <span class="data">{{source}}</span> (<span class="data">{{source_type}}</span>)
+- URL: <span class="data">{{url}}</span>
+- 본문:
+<span class="data">{{content}}</span>
+---
+[콘텐츠 2]
+...
+
+━━━━━━━━━━━━━━━━━━━━
+지시사항
+━━━━━━━━━━━━━━━━━━━━
+위 콘텐츠를 바탕으로 사용자 설정에 맞는 브리프 레터 1건을 생성하세요.
+JSON만 반환해주세요. 다른 텍스트 없이 JSON만 출력하세요.</div>
+
+    <h3>11-3. 프롬프트 설계 원칙</h3>
+    <table>
+      <tr><th>원칙</th><th>설명</th></tr>
+      <tr>
+        <td><strong>전문 복제 금지</strong></td>
+        <td>원문 재게재 없이 변형적 요약만 허용. 저작권 리스크 최소화.</td>
+      </tr>
+      <tr>
+        <td><strong>출처 투명성</strong></td>
+        <td>모든 정보에 원문 링크 필수 첨부. 독자가 원문 확인 가능.</td>
+      </tr>
+      <tr>
+        <td><strong>파라미터 분기</strong></td>
+        <td>personaType &times; tone &times; reading_time 조합에 따라 스타일·문체·분량이 자동 분기.</td>
+      </tr>
+      <tr>
+        <td><strong>JSON 강제 출력</strong></td>
+        <td>프론트엔드에서 파싱 가능하도록 구조화된 형식으로만 응답.</td>
+      </tr>
+      <tr>
+        <td><strong>소스 유형 인식</strong></td>
+        <td>web(웹 검색) / rss(피드) 등 소스 특성에 맞는 처리 방식 적용.</td>
+      </tr>
+    </table>
+
+    <hr />
+
+    <!-- 풋터 -->
+    <div class="doc-footer">
+      CURIX Internal Document &middot; MVP v1.0 &middot; 2026.03.25<br/>
+      본 문서는 내부 공유 목적으로 작성되었습니다.
+    </div>
+
+  </div>
+</body>
+</html>

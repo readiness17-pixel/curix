@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CURIX - AI 기반 맞춤형 브리프 레터</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8f9fa;
+      color: #1a1a1a;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* 상단 */
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #111;
+    }
+
+    .logo-accent {
+      color: #4f46e5;
+    }
+
+    .tagline {
+      margin-top: 8px;
+      font-size: 15px;
+      color: #666;
+    }
+
+    /* 입력 영역 */
+    .input-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    }
+
+    .topic-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 17px;
+      font-family: inherit;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .topic-input:focus {
+      border-color: #4f46e5;
+    }
+
+    .topic-input::placeholder {
+      color: #aaa;
+    }
+
+    .settings {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .setting-group {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .setting-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #888;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .setting-select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fff;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+
+    .setting-select:focus {
+      border-color: #4f46e5;
+    }
+
+    .generate-btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      color: #fff;
+      background: #4f46e5;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .generate-btn:hover {
+      background: #4338ca;
+    }
+
+    .generate-btn:active {
+      transform: scale(0.98);
+    }
+
+    .generate-btn:disabled {
+      background: #a5b4fc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 로딩 */
+    .loading-section {
+      display: none;
+      text-align: center;
+      margin-top: 48px;
+      padding: 40px 20px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #4f46e5;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 15px;
+      color: #666;
+    }
+
+    .loading-time {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 8px;
+    }
+
+    /* 에러 */
+    .error-section {
+      display: none;
+      text-align: center;
+      margin-top: 48px;
+      padding: 32px 20px;
+      background: #fef2f2;
+      border-radius: 16px;
+    }
+
+    .error-text {
+      font-size: 15px;
+      color: #dc2626;
+      margin-bottom: 16px;
+    }
+
+    .retry-btn {
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #dc2626;
+      background: #fff;
+      border: 2px solid #fca5a5;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .retry-btn:hover {
+      background: #fef2f2;
+    }
+
+    /* 결과 */
+    .result-section {
+      display: none;
+      margin-top: 48px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    }
+
+    .result-title {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.3;
+      color: #111;
+    }
+
+    .result-subtitle {
+      font-size: 15px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .result-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4f46e5;
+      background: #eef2ff;
+      border-radius: 20px;
+    }
+
+    .reading-time {
+      font-size: 13px;
+      color: #999;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 28px 0;
+    }
+
+    .letter-body {
+      font-size: 15.5px;
+      line-height: 1.85;
+      color: #333;
+    }
+
+    .letter-body h2 {
+      font-size: 19px;
+      font-weight: 700;
+      color: #111;
+      margin: 32px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #eef2ff;
+    }
+
+    .letter-body h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #222;
+      margin: 24px 0 8px;
+    }
+
+    .letter-body p {
+      margin: 12px 0;
+    }
+
+    .letter-body ul, .letter-body ol {
+      margin: 12px 0;
+      padding-left: 24px;
+    }
+
+    .letter-body li {
+      margin: 6px 0;
+    }
+
+    .letter-body a {
+      color: #4f46e5;
+      text-decoration: none;
+      border-bottom: 1px solid #c7d2fe;
+      transition: border-color 0.2s;
+    }
+
+    .letter-body a:hover {
+      border-color: #4f46e5;
+    }
+
+    .letter-body strong {
+      font-weight: 700;
+      color: #111;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #4f46e5;
+      background: #eef2ff;
+      padding: 3px 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .outro-text {
+      color: #666;
+      font-style: italic;
+    }
+
+    .reset-btn {
+      display: block;
+      width: 100%;
+      margin-top: 32px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #4f46e5;
+      background: #eef2ff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: #e0e7ff;
+    }
+
+    .source-count {
+      text-align: center;
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 24px 16px 60px; }
+      .input-section, .result-section { padding: 24px 20px; }
+      .settings { flex-direction: column; gap: 10px; }
+      .result-title { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 상단 -->
+    <div class="header">
+      <div class="logo">CUR<span class="logo-accent">IX</span></div>
+      <p class="tagline">AI 기반 맞춤형 브리프 레터</p>
+    </div>
+
+    <!-- 입력 영역 -->
+    <div class="input-section">
+      <input
+        type="text"
+        class="topic-input"
+        id="topicInput"
+        placeholder="어떤 주제의 브리프 레터를 받고 싶으신가요?"
+      />
+      <div class="settings">
+        <div class="setting-group">
+          <label class="setting-label">스타일</label>
+          <select class="setting-select" id="personaType">
+            <option value="요약형">요약형</option>
+            <option value="인사이트형" selected>인사이트형</option>
+            <option value="큐레이션형">큐레이션형</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">톤</label>
+          <select class="setting-select" id="tone">
+            <option value="친근한">친근한</option>
+            <option value="전문적인" selected>전문적인</option>
+            <option value="간결한">간결한</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">분량</label>
+          <select class="setting-select" id="readingTime">
+            <option value="3분 이내">3분 이내</option>
+            <option value="5분 이내" selected>5분 이내</option>
+            <option value="10분 이상">10분 이상</option>
+          </select>
+        </div>
+      </div>
+      <button class="generate-btn" id="generateBtn" onclick="generate()">
+        레터 생성하기
+      </button>
+    </div>
+
+    <!-- 로딩 -->
+    <div class="loading-section" id="loadingSection">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">콘텐츠를 수집하고 있습니다...</div>
+      <div class="loading-time" id="loadingTime"></div>
+    </div>
+
+    <!-- 에러 -->
+    <div class="error-section" id="errorSection">
+      <p class="error-text" id="errorText"></p>
+      <button class="retry-btn" onclick="generate()">다시 시도하기</button>
+    </div>
+
+    <!-- 결과 -->
+    <div class="result-section" id="resultSection">
+      <h1 class="result-title" id="resultTitle"></h1>
+      <p class="result-subtitle" id="resultSubtitle"></p>
+      <div class="result-meta" id="resultMeta"></div>
+      <hr class="divider" />
+      <div class="letter-body" id="letterBody"></div>
+      <hr class="divider" />
+      <p class="source-count" id="sourceCount"></p>
+      <button class="reset-btn" onclick="reset()">다른 토픽으로 다시 만들기</button>
+    </div>
+  </div>
+
+  <script>
+    let timerInterval = null;
+
+    function showSection(id) {
+      ["loadingSection", "errorSection", "resultSection"].forEach((s) => {
+        document.getElementById(s).style.display = "none";
+      });
+      if (id) document.getElementById(id).style.display = "block";
+    }
+
+    function startTimer() {
+      const start = Date.now();
+      const el = document.getElementById("loadingTime");
+      timerInterval = setInterval(() => {
+        const seconds = Math.floor((Date.now() - start) / 1000);
+        el.textContent = `${seconds}초 경과`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    async function generate() {
+      const topic = document.getElementById("topicInput").value.trim();
+      if (!topic) {
+        alert("토픽을 입력해주세요.");
+        document.getElementById("topicInput").focus();
+        return;
+      }
+
+      const btn = document.getElementById("generateBtn");
+      btn.disabled = true;
+
+      showSection("loadingSection");
+      document.getElementById("loadingText").textContent = "콘텐츠를 수집하고 있습니다...";
+      startTimer();
+
+      try {
+        // 로딩 텍스트 변경 (수집 → 작성)
+        setTimeout(() => {
+          const loadingEl = document.getElementById("loadingText");
+          if (loadingEl && document.getElementById("loadingSection").style.display !== "none") {
+            loadingEl.textContent = "레터를 작성하고 있습니다...";
+          }
+        }, 8000);
+
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topic,
+            settings: {
+              persona_type: document.getElementById("personaType").value,
+              tone: document.getElementById("tone").value,
+              reading_time: document.getElementById("readingTime").value,
+            },
+          }),
+        });
+
+        stopTimer();
+
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error("서버 응답 오류: " + text.slice(0, 100));
+        }
+
+        if (!res.ok) {
+          throw new Error(data.error || "알 수 없는 오류가 발생했습니다.");
+        }
+        renderResult(data);
+      } catch (error) {
+        stopTimer();
+        document.getElementById("errorText").textContent = error.message;
+        showSection("errorSection");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function renderResult(data) {
+      const letter = data.letter;
+
+      document.getElementById("resultTitle").textContent = letter.title;
+      document.getElementById("resultSubtitle").textContent = letter.subtitle;
+
+      // 메타 (태그 + 읽기 시간)
+      const metaEl = document.getElementById("resultMeta");
+      metaEl.innerHTML = "";
+      if (letter.topic_tags) {
+        letter.topic_tags.forEach((tag) => {
+          const span = document.createElement("span");
+          span.className = "tag";
+          span.textContent = tag;
+          metaEl.appendChild(span);
+        });
+      }
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "reading-time";
+      timeSpan.textContent = `${letter.reading_time_minutes || "?"}분 읽기`;
+      metaEl.appendChild(timeSpan);
+
+      // 본문 조합
+      let bodyMarkdown = "";
+
+      // 인트로
+      if (letter.intro) {
+        bodyMarkdown += letter.intro + "\n\n";
+      }
+
+      // 섹션들
+      if (letter.sections) {
+        letter.sections.forEach((section) => {
+          bodyMarkdown += `<span class="section-label">${section.type}</span>\n\n`;
+          bodyMarkdown += `## ${section.title}\n\n`;
+          bodyMarkdown += section.content + "\n\n";
+        });
+      }
+
+      // 아웃트로
+      if (letter.outro) {
+        bodyMarkdown += `---\n\n*${letter.outro}*\n`;
+      }
+
+      document.getElementById("letterBody").innerHTML = marked.parse(bodyMarkdown);
+      document.getElementById("sourceCount").textContent = `${data.source_count}개 소스에서 수집`;
+
+      showSection("resultSection");
+
+      // 결과로 스크롤
+      document.getElementById("resultSection").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function reset() {
+      document.getElementById("topicInput").value = "";
+      document.getElementById("topicInput").focus();
+      showSection(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // Enter 키로 생성
+    document.getElementById("topicInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") generate();
+    });
+  </script>
+</body>
+</html>
