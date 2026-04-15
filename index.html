@@ -646,22 +646,33 @@
       document.getElementById("resultSection").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
+    function formatAbsoluteDate(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}.${mm}.${dd}`;
+    }
+
     function formatPublishedDate(iso) {
       if (!iso) return null;
       const d = new Date(iso);
       if (isNaN(d.getTime())) return null;
       const now = new Date();
       const diffMs = now - d;
+      // 미래 날짜(서버 시계 스큐 등)는 절대 날짜로 표시
+      if (diffMs < 0) return formatAbsoluteDate(d);
       const diffDays = Math.floor(diffMs / 86400000);
       if (diffDays === 0) return "오늘";
       if (diffDays === 1) return "어제";
       if (diffDays < 7) return `${diffDays}일 전`;
       if (diffDays < 30) return `${Math.floor(diffDays / 7)}주 전`;
-      // 30일 이상은 절대 날짜로
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      return `${yyyy}.${mm}.${dd}`;
+      return formatAbsoluteDate(d);
+    }
+
+    // URL 스킴 검증 (http/https만 허용 — javascript: 스킴 방어)
+    function isSafeUrl(url) {
+      if (typeof url !== "string") return false;
+      return /^https?:\/\//i.test(url);
     }
 
     function escapeHtml(s) {
@@ -690,7 +701,7 @@
         li.className = "source-item";
 
         const title = escapeHtml(src.title || "제목 없음");
-        const url = escapeHtml(src.url || "#");
+        const safeUrl = isSafeUrl(src.url) ? escapeHtml(src.url) : "#";
         const publisher = escapeHtml(src.source || "출처 미상");
         const dateLabel = formatPublishedDate(src.published_at);
 
@@ -699,7 +710,7 @@
           : `<span class="source-date-unknown">날짜 정보 없음</span>`;
 
         li.innerHTML = `
-          <a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a>
+          <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${title}</a>
           <span class="source-meta">
             <span class="source-publisher">${publisher}</span> · ${dateHtml}
           </span>

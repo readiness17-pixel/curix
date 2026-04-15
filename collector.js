@@ -105,7 +105,7 @@ async function collectFromRSS(topic) {
 
   try {
     const parsed = await rssParser.parseURL(url);
-    const items = (parsed.items || []).slice(0, 15);
+    const items = (parsed.items || []).slice(0, 20);
 
     const results = items.map((item) => {
       const { title, source } = extractSourceFromTitle(item.title);
@@ -158,16 +158,23 @@ async function collectContents(topic) {
     return true;
   });
 
-  // 날짜순 정렬 (최신순) — 날짜 없는 항목은 가장 뒤로
-  deduplicated.sort((a, b) => {
-    const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
-    const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
-    return dateB - dateA;
+  // 날짜가 있고 유효한 항목만 유지 (모든 표시 소스에 날짜를 보장)
+  const withValidDate = deduplicated.filter((item) => {
+    if (!item.published_at) return false;
+    const ts = new Date(item.published_at).getTime();
+    return !isNaN(ts);
   });
 
-  console.log(`[결과] 중복 제거 후: ${deduplicated.length}건\n`);
+  // 날짜순 정렬 (최신순)
+  withValidDate.sort((a, b) => {
+    return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
+  });
 
-  return deduplicated;
+  console.log(
+    `[결과] 중복 제거: ${deduplicated.length}건 → 날짜 필터 후: ${withValidDate.length}건\n`
+  );
+
+  return withValidDate;
 }
 
 module.exports = { collectContents };
